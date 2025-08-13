@@ -1,11 +1,18 @@
+$(V).SILENT:
+
 help:
 	echo "make client					runs client program"
 	echo "make server					runs server program"
 
 c:
-	echo "Running Client"
-	cd client && go run .
+	echo "Running client"
+	make build -s
+	./znp-cs -r client
 
 s:
-	echo "Running Server"
-	cd server && go run .
+	echo "Running server"
+	make build -s
+	./znp-cs -r server
+
+build:
+	go build .
