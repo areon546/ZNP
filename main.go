@@ -9,12 +9,10 @@ import (
 var (
 	role    string = ""
 	address IP4    = ""
-	port    Port   = "8961"
+	port    Port   = "8691"
 )
 
 func main() {
-	fmt.Println("I am A Client Main")
-
 	flag.StringVar(&role, "r", role, "Specify whether the program should run as a Client or a Server")
 	flag.StringVar(&ip, "ip", "", "Specify the IP address you are making calls to as a client")
 
@@ -25,6 +23,8 @@ func main() {
 
 func determineRole() {
 	switch role {
+	case "m":
+		runMessager()
 	case "server":
 		runServer()
 	case "client":
@@ -34,13 +34,22 @@ func determineRole() {
 	}
 }
 
+func runMessager() {
+	m := NewMessageConnection(port, ProcessState)
+
+	root := IP4("127.0.0.1")
+	m.Connect(root)
+	m.Close()
+}
+
 func runServer() {
 	s := NewZNPServer(port)
-	s.Run()
+	s.conn.Host(port)
 }
 
 func runClient() {
-	c := NewZNPClient(8691, os.Stdin)
+	c := NewZNPClient(port, os.Stdin)
+	ip := IP4(address)
 	c.Connect(ip)
 }
 

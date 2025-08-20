@@ -1,6 +1,7 @@
 package messages
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -19,33 +20,27 @@ func EmptyMessage() Message {
 	return NewMessage("")
 }
 
-func Send(conn net.Conn, msg Message) error {
-	// Split message up into chunks if larger than buffer size 1024
-
-	if len(msg) > bufferSize {
-		panic("TOO LONG")
-		// Split up message into chunks
-	}
-
-	buffer := msg // TODO: Enforce buffer size limit is 1024
-	return sendMessage(conn, buffer)
+func (m Message) String() string {
+	return string(m)
 }
 
-func sendMessage(conn net.Conn, msg Message) error {
-	n, err := conn.Write(msg)
+func Send(conn net.Conn, msg Message) error {
+	// TODO: Split message up into chunks if larger than buffer size 1024
+
+	_, err := conn.Write(msg)
 	if err != nil {
+
 		fmt.Println("Err sending message:", err)
 		return err
 	}
 
-	fmt.Println("Bytes Written: ", n)
 	return nil
 }
 
 // Blocks thread whilst waiting for message to be returned.
-func Receive(conn net.Conn) (n int, msg Message) {
+func Receive(conn net.Conn) (n int, msg Message, err error) {
 	msg = msgBuffer(bufferSize)
-	n, err := conn.Read(msg)
+	n, err = conn.Read(msg)
 
 	if err != nil && !errors.Is(err, io.EOF) {
 		fmt.Println("Err receiving message:", err)
@@ -58,4 +53,18 @@ func Receive(conn net.Conn) (n int, msg Message) {
 // Creates a byte array for use by Writers and Readers
 func msgBuffer(size int) []byte {
 	return make([]byte, size)
+}
+
+// IN and OUT
+
+// Read 1 line from the io.Reader
+func Read(in io.Reader) Message {
+	scanner := bufio.NewScanner(in)
+	scanner.Scan()
+
+	if scanner.Err() != nil {
+		// Handle error.
+	}
+
+	return NewMessage(scanner.Text())
 }
