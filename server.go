@@ -1,29 +1,25 @@
-package server
+package main
 
 import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"time"
+	"znp-cs/status"
 )
 
-func main() {
-	s := zNPServer{port: 8691}
-	s.Run()
+var ip string = ""
+
+func NewZNPServer(port Port) znpServer {
+	return znpServer{port: port}
 }
 
-func NewZNPServer(port int) zNPServer {
-	return zNPServer{port: port}
+type znpServer struct {
+	port Port
 }
 
-type zNPServer struct {
-	port int
-}
-
-func (s zNPServer) Run() {
+func (s znpServer) Run() {
 	address := ":8691"
-	fmt.Println(strconv.Itoa(s.port))
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println("Error creating listener:", err)
@@ -46,22 +42,44 @@ func (s zNPServer) Run() {
 
 func handleConnection(conn net.Conn) {
 	fmt.Println("Client connected:", conn.RemoteAddr())
+	state := "talking"
 
 	time.Sleep(500000)
 	// wait for message
-	sendMessage(conn, "Hi Friend")
 
-	conn.Close()
+	for {
+		time.Sleep(1 * time.Second)
+		switch state {
+		case status.TALKING:
+			print(conn, state)
+			sendMessage(conn, "Hi Friend")
+
+			state = status.LISTENING
+		case status.LISTENING:
+			print(conn, state)
+
+			state = status.STOPPING
+		case status.STOPPING:
+			print(conn, state)
+
+			conn.Close()
+			return
+		default:
+			fmt.Println("Erroneous state: ", state)
+			state = status.STOPPING
+		}
+	}
+}
+
+func printC(conn net.Conn, message string) {
+	fmt.Println(conn.RemoteAddr(), message)
 }
 
 func sendMessage(conn net.Conn, msg string) {
+	print(conn, "Sending: "+msg)
 	n, err := fmt.Fprintf(conn, msg)
 	fmt.Println("N", n, "bytes written")
 	if err != nil {
 		fmt.Println("Sending Message: Error: ", err)
 	}
-}
-
-func receiveMessage(conn net.Conn) (msg string) {
-	return
 }

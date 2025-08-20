@@ -3,38 +3,48 @@ package main
 import (
 	"flag"
 	"fmt"
-	"znp-cs/client"
-	"znp-cs/server"
+	"os"
 )
 
-var role string = ""
+var (
+	role    string = ""
+	address IP4    = ""
+	port    Port   = "8961"
+)
 
 func main() {
+	fmt.Println("I am A Client Main")
+
 	flag.StringVar(&role, "r", role, "Specify whether the program should run as a Client or a Server")
+	flag.StringVar(&ip, "ip", "", "Specify the IP address you are making calls to as a client")
 
 	flag.Parse()
 
+	determineRole()
+}
+
+func determineRole() {
 	switch role {
-	case "client":
-		fallthrough
-	case "c":
-		runClient()
 	case "server":
-		fallthrough
-	case "s":
 		runServer()
+	case "client":
+		runClient()
 	default:
-		fmt.Println("No role given")
-		fmt.Println(role)
+		print("Unexpected role:", role)
 	}
 }
 
-func runClient() {
-	c := client.NewZNPClient(8691)
-	c.Connect("localhost")
+func runServer() {
+	s := NewZNPServer(port)
+	s.Run()
 }
 
-func runServer() {
-	s := server.NewZNPServer(8691)
-	s.Run()
+func runClient() {
+	c := NewZNPClient(8691, os.Stdin)
+	c.Connect(ip)
+}
+
+// Misc
+func print(a ...any) {
+	fmt.Println(a...)
 }
